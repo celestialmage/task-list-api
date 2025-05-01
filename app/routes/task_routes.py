@@ -1,6 +1,7 @@
 from flask import Blueprint, abort, make_response, request, Response
+from datetime import date
 from app.models.task import Task
-from sqlalchemy import func
+from sqlalchemy import func, desc
 from .route_utilities import validate_model
 from ..db import db
 
@@ -27,9 +28,9 @@ def get_all_tasks():
 
     title_param = request.args.get("title")
     description_param = request.args.get("description")
-    sort_by = request.args.get("sort_by")
+    sort = request.args.get("sort")
 
-    query = sort_tasks_by(sort_by)
+    query = sort_tasks_by(sort)
 
     if title_param:
         query = query.where(Task.title.ilike(f"%{title_param}%"))
@@ -54,6 +55,28 @@ def get_single_task(task_id):
     return {
         "task": task.to_dict()
     }
+
+@bp.patch("/<task_id>/mark_complete")
+def mark_task_complete(task_id):
+
+    task = validate_model(Task, task_id)
+
+    task = change_status(task, True)
+
+    db.session.commit()
+
+    return Response(status=204, mimetype='application/json')
+
+@bp.patch("/<task_id>/mark_incomplete")
+def mark_task_incomplete(task_id):
+
+    task = validate_model(Task, task_id)
+
+    task = change_status(task, False)
+
+    db.session.commit()
+
+    return Response(status=204, mimetype='application/json')
 
 @bp.delete("/<task_id>")
 def remove_task(task_id):
@@ -84,26 +107,36 @@ def update_task(task_id):
 
     return {"task": task.to_dict()}, 204
 
-def sort_tasks_by(sort_by):
+def change_status(task, is_complete):
 
-    VALID_SORTS = ["title", "is_complete"]
+    if is_complete and not task.completed_at:
+        task.completed_at = date.today()
+    elif not is_complete and task.completed_at:
+        task.completed_at = None
 
-    if sort_by and sort_by in VALID_SORTS:
+    return task
 
-        if sort_by == "title":
-            query = db.select(Task).order_by(func.lower(Task.title))
+
+def sort_tasks_by(sort):
+
+    VALID_SORTS = ["asc", "desc"]
+
+    if sort and sort in VALID_SORTS:
+
+        if sort == "asc":
+            query = db.select(Task).order_by(Task.title)
         else:
-            query = db.select(Task).order_by(Task.completed_at)
+            query = db.select(Task).order_by(desc(Task.title))
 
-    elif sort_by:
+    elif sort:
 
         response = {
             "details": 
-            f"Sort query {sort_by} was not recognized. Valid sort options are 'id', 'title', and 'is_complete'."
+            f"Sort query {sort} was not recognized. Valid sort options are {", ".join(VALID_SORTS)}."
         }
         
         abort(make_response(response, 400))
     else:
-        query = db.select(Task).order_by(Task.id)
+        query = db.select(Task).order_by(Task.completed_at)
 
     return query

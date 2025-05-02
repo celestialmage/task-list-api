@@ -4,8 +4,12 @@ from app.models.task import Task
 from sqlalchemy import func, desc
 from .route_utilities import validate_model
 from ..db import db
+import os
+import requests
 
 bp = Blueprint("task_bp", __name__, url_prefix='/tasks')
+
+SLACK_URL = 'https://slack.com/api/chat.postMessage'
 
 @bp.post("")
 def create_task():
@@ -65,7 +69,21 @@ def mark_task_complete(task_id):
 
     db.session.commit()
 
-    return Response(status=204, mimetype='application/json')
+    api_key = os.environ.get('SLACK_API_KEY')
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+
+    slack_message = {
+        "channel": "test-slack-api",
+        "text": f"Someone just completed the task {task.title}",
+    }
+
+    result = requests.post(url=SLACK_URL, json=slack_message, headers=headers)
+
+    return result._content
 
 @bp.patch("/<task_id>/mark_incomplete")
 def mark_task_incomplete(task_id):

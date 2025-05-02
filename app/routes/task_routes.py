@@ -142,9 +142,9 @@ def sort_tasks_by(sort):
     if sort and sort in VALID_SORTS:
 
         if sort == "asc":
-            query = db.select(Task).order_by(Task.title)
+            query = db.select(Task).order_by(func.lower(Task.title))
         else:
-            query = db.select(Task).order_by(desc(Task.title))
+            query = db.select(Task).order_by(desc(func.lower(Task.title)))
 
     elif sort:
 
@@ -155,6 +155,6 @@ def sort_tasks_by(sort):
         
         abort(make_response(response, 400))
     else:
-        query = db.select(Task).order_by(Task.completed_at)
+        query = db.select(Task).order_by(Task.id)
 
     return query

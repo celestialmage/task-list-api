@@ -3,6 +3,7 @@ from datetime import date
 from app.models.task import Task
 from sqlalchemy import func, desc
 from .route_utilities import validate_model
+from ..models.goal import Goal
 from ..db import db
 import os
 import requests
@@ -26,6 +27,7 @@ def create_task():
     db.session.commit()
 
     return {"task": new_task.to_dict()}, 201
+
 
 @bp.get("")
 def get_all_tasks():

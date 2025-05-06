@@ -1,6 +1,7 @@
 from flask import Blueprint, abort, make_response, request, Response
 from ..models.goal import Goal
 from .route_utilities import validate_model
+from ..models.task import Task
 from ..db import db
 
 bp = Blueprint("goal_bp", __name__, url_prefix="/goals")
@@ -49,6 +50,21 @@ def get_single_goal(goal_id):
         "goal": goal.to_dict()
     }
 
+@bp.get("/<goal_id>/tasks")
+def get_tasks_for_goal(goal_id):
+
+    goal = validate_model(Goal, goal_id)
+
+    query = db.select(Task).where(Task.goal_id == goal_id)
+
+    goal_dict = goal.to_dict()
+
+    tasks = db.session.scalars(query)
+
+    goal_dict["tasks"] = [task.to_dict() for task in tasks]
+
+    return goal_dict
+
 @bp.delete("/<goal_id>")
 def remove_goal(goal_id):
 
@@ -76,4 +92,30 @@ def update_goal(goal_id):
     db.session.commit()
 
     return {"goal": goal.to_dict()}, 204
+
+@bp.post("/<goal_id>/tasks")
+def update_goal_with_tasks(goal_id):
+
+    goal = validate_model(Goal, goal_id)
+
+    request_body = request.get_json()
+
+    task_ids = request_body["task_ids"]
+
+    for id in task_ids:
+
+        task = validate_model(Task, id)
+
+        task.goal_id = goal.id
+
+    db.session.commit()
+
+    return {
+        "id": goal.id,
+        "task_ids": task_ids
+    }, 200
+
+
+
+
 

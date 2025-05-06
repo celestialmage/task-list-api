@@ -13,9 +13,6 @@ class Goal(db.Model):
             "title": self.title
         }
 
-        if self.tasks:
-            goal_as_dict["tasks"] = self.tasks
-
         return goal_as_dict
     
     @classmethod

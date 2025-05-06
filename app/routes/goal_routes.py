@@ -6,6 +6,7 @@ from ..db import db
 
 bp = Blueprint("goal_bp", __name__, url_prefix="/goals")
 
+
 @bp.post("")
 def create_goal():
     request_body = request.get_json()
@@ -21,6 +22,7 @@ def create_goal():
     db.session.commit()
 
     return {"goal": new_goal.to_dict()}, 201
+
 
 @bp.get("")
 def get_all_goals():
@@ -41,6 +43,7 @@ def get_all_goals():
 
     return goals_response
 
+
 @bp.get("/<goal_id>")
 def get_single_goal(goal_id):
 
@@ -49,6 +52,7 @@ def get_single_goal(goal_id):
     return {
         "goal": goal.to_dict()
     }
+
 
 @bp.get("/<goal_id>/tasks")
 def get_tasks_for_goal(goal_id):
@@ -64,6 +68,7 @@ def get_tasks_for_goal(goal_id):
     goal_dict["tasks"] = [task.to_dict() for task in tasks]
 
     return goal_dict
+
 
 @bp.delete("/<goal_id>")
 def remove_goal(goal_id):
@@ -93,6 +98,7 @@ def update_goal(goal_id):
 
     return {"goal": goal.to_dict()}, 204
 
+
 @bp.post("/<goal_id>/tasks")
 def update_goal_with_tasks(goal_id):
 
@@ -102,11 +108,15 @@ def update_goal_with_tasks(goal_id):
 
     task_ids = request_body["task_ids"]
 
+    goal.tasks = []
+
     for id in task_ids:
 
         task = validate_model(Task, id)
 
         task.goal_id = goal.id
+
+        goal.tasks.append(task)
 
     db.session.commit()
 
@@ -114,8 +124,3 @@ def update_goal_with_tasks(goal_id):
         "id": goal.id,
         "task_ids": task_ids
     }, 200
-
-
-
-
-

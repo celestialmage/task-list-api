@@ -85,7 +85,7 @@ def mark_task_complete(task_id):
 
     result = requests.post(url=SLACK_URL, json=slack_message, headers=headers)
 
-    return result._content
+    return task.to_dict(), 204
 
 @bp.patch("/<task_id>/mark_incomplete")
 def mark_task_incomplete(task_id):
@@ -129,9 +129,9 @@ def update_task(task_id):
 
 def change_status(task, is_complete):
 
-    if is_complete and not task.completed_at:
+    if is_complete:
         task.completed_at = date.today()
-    elif not is_complete and task.completed_at:
+    elif not is_complete:
         task.completed_at = None
 
     return task

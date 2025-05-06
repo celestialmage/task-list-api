@@ -5,7 +5,7 @@ from ..db import db
 class Goal(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     title: Mapped[str]
-    tasks: Mapped[Optional["Task"]] = relationship(back_populates="goals")
+    tasks: Mapped[list["Task"]] = relationship(back_populates="goal")
 
     def to_dict(self):
         goal_as_dict = {
@@ -13,8 +13,8 @@ class Goal(db.Model):
             "title": self.title
         }
 
-        if self.task:
-            goal_as_dict["task"] = self.task.title
+        if self.tasks:
+            goal_as_dict["tasks"] = self.tasks
 
         return goal_as_dict
     

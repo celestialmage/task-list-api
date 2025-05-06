@@ -152,7 +152,7 @@ def sort_tasks_by(sort):
 
         response = {
             "details": 
-            f"Sort query {sort} was not recognized. Valid sort options are {", ".join(VALID_SORTS)}."
+            f"Sort query {sort} was not recognized. Valid sort options are {', '.join(VALID_SORTS)}."
         }
         
         abort(make_response(response, 400))

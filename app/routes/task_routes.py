@@ -2,7 +2,7 @@ from flask import Blueprint, abort, make_response, request, Response
 from datetime import date
 from app.models.task import Task
 from sqlalchemy import func, desc
-from .route_utilities import validate_model
+from .route_utilities import validate_model, model_from_request
 from ..models.goal import Goal
 from ..db import db
 import os
@@ -14,14 +14,8 @@ SLACK_URL = 'https://slack.com/api/chat.postMessage'
 
 @bp.post("")
 def create_task():
-    request_body = request.get_json()
 
-    try:
-        new_task = Task.from_dict(request_body)
-
-    except KeyError as error:
-        response = {"details": f"Invalid data"}
-        abort(make_response(response, 400))
+    new_task = model_from_request(cls=Task, request=request)
 
     db.session.add(new_task)
     db.session.commit()

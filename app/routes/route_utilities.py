@@ -17,3 +17,15 @@ def validate_model(cls, model_id):
         abort(make_response(response, 404))
 
     return model
+
+def model_from_request(cls, request):
+
+    request_body = request.get_json()
+
+    try:
+        model_dict = cls.from_dict(request_body)
+    except KeyError as error:
+        response = {"details": "Invalid data"}
+        abort(make_response(response, 400))
+
+    return model_dict

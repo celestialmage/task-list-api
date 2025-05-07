@@ -1,6 +1,6 @@
 from flask import Blueprint, abort, make_response, request, Response
 from ..models.goal import Goal
-from .route_utilities import validate_model
+from .route_utilities import validate_model, model_from_request
 from ..models.task import Task
 from ..db import db
 
@@ -9,14 +9,7 @@ bp = Blueprint("goal_bp", __name__, url_prefix="/goals")
 
 @bp.post("")
 def create_goal():
-    request_body = request.get_json()
-
-    try:
-        new_goal = Goal.from_dict(request_body)
-
-    except KeyError as error:
-        response = {"details": f"Invalid data"}
-        abort(make_response(response, 400))
+    new_goal = model_from_request(cls=Goal, request=request)
 
     db.session.add(new_goal)
     db.session.commit()
